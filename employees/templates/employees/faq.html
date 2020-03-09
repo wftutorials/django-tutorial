@@ -1,0 +1,27 @@
+{% extends "primary.html" %}
+
+{% block content %}
+
+<h4>This is the faq template</h4>
+{% if show %}
+<p>Some text goes here</p>
+{% else %}
+<p>No text goes here</p>
+{% endif %}
+
+<ul>
+{% for dog in dogs %}
+    <li> {{ dog }} </li>
+{%  endfor %}
+</ul>
+
+
+{% endblock %}
+
+
+{% block content2 %}
+
+<h4>Second Content Block</h4>
+<p>Some text goes here</p>
+
+{% endblock %}
