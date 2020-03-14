@@ -1,0 +1,8 @@
+<h1>Login Page</h1>
+<form role='form' action="{% url 'emp_login' %}" method="post">
+    {% csrf_token %}
+    <p>Please Login</p>
+    {{ form.as_p}}
+    <button type="submit" class="btn btn-success">Sign in</button>
+</form>
+<br><br>

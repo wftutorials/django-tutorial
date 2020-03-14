@@ -844,6 +844,192 @@ use bootstrap
 Of important note is `form.as_p` we could have just used `form` but using `form.as_p` wraps
 each element in a `p` element. Learn more [here](https://docs.djangoproject.com/en/3.0/topics/forms/).
 
+Some other things to note
+
+* The `url "emp_create"` creates a url from the shorthand name
+* The `csrf_token` line is required to submit the form.
+* If you are not using layout templates you dont need to add the `extends` or `block content` sections.
+
 The results is shown below
 
 [dj_create_employee_form.png]
+
+
+### Saving form data to database
+
+Now that we have our form up and running. We create going to submit the form and save
+our data.
+
+We modify our `views.py` function called `create` to accept a post request.
+
+```python
+def create(request):
+    if request.method == "POST":
+        empForm = EmployeeForm(data=request.POST)
+        if empForm.is_valid():
+            empForm.save()
+        return HttpResponse("Employee saved")
+    else:
+        empForm = EmployeeForm()
+        return render(request,'employees/create.html', {'form':empForm})
+```
+
+Above if the `request.method` is post we load the data from the request into our `EmployeeForm`.
+Then if the form is valid we save it. Otherwise we display the form.
+
+[dj_submit_form.png]
+
+The results can be seen from the DB browser.
+
+[dj_form_submit_results.png]
+
+
+### Updating data using forms
+
+Lets see how we can update our database using a form. First we update our `update` view in
+`views.py`.
+
+```python
+def update(request, id):
+    if request.method == "POST":
+        emp = Employees.objects.get(pk=id)
+        empForm = EmployeeForm(request.POST, instance=emp)
+        if empForm.is_valid():
+            empForm.save()
+            return redirect(request.path)
+    else:
+        emp = Employees.objects.get(pk=id)
+        empForm =  EmployeeForm(instance=emp)
+        return render(request, 'employees/update.html',{'form':empForm})
+```
+
+Lets review this code. First note we added the `id`
+
+```python
+def update(request, id):
+```
+
+in the function call. This means this is required. Of course our route in `urls.py` reflects this.
+
+```python
+path('update/<id>/', views.update, name="emp_update"),
+```
+
+The first section in the `update` function contains an `if` statement check for
+a `POST` request. We the load the employee model and then we add the POST data
+and the model in the `EmployeeForm` constructure.
+
+```python
+emp = Employees.objects.get(pk=id)
+empForm = EmployeeForm(request.POST, instance=emp)
+```
+
+This way the form knows its needs to update and not create. Learn more [here](https://docs.djangoproject.com/en/3.0/topics/forms/modelforms/#the-save-method). The rest is **rote**. Just
+check for validation and save. We return a redirect using the `request.path`. 
+
+If there is not `POST` request we just load the employee form from the employee model and display
+the current data in the model.
+
+```python
+emp = Employees.objects.get(pk=id)
+empForm =  EmployeeForm(instance=emp)
+```
+
+In our `update.html` template note the `request.path` in the form action paramter.
+
+```html
+<form action="{{ request.path }}" method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+```
+
+We use `request.path` so we can main the `id` parameter when we submit the form.
+
+So we can see the results below.
+
+[dj_update_form_database.gif]
+
+## Authentication and Access Control
+
+TO get started with authentication we need to have a login view. With Django this process
+is made quite easy. Lets head to our `urls.py` file. First we need to import some views.
+At the top add this code
+
+```python
+from django.contrib.auth.views import LoginView
+```
+
+Above we import the `LoginView` from django. Now we can add path in our `urls.py` file add the following lines
+
+```python
+path('login/',LoginView.as_view(template_name="employees/login.html"),name="emp_login")
+```
+
+Above we add the `login` path and we direct this path to the `LoginView`. We have to provide
+a `template_name` in the `LoginView.as_view()` function. We choose `login.html` lets create
+this.
+
+```html
+<h1>Login Page</h1>
+```
+
+Our `login.html` file is simple for now. Lets test this and see what happens
+
+>Note we did not add any views in `views.py` we did all this in `urls.py` file.
+
+[dj_simple_login_view.png]
+
+### Authenticating a user
+
+Lets finish the login view. In `login.html` add the following content.
+
+```html
+<h1>Login Page</h1>
+<form role='form' action="{% url 'emp_login' %}" method="post">
+    {% csrf_token %}
+    <p>Please Login</p>
+    {{ form.as_p}}
+    <button type="submit" class="btn btn-success">Sign in</button>
+</form>
+<br><br>
+```
+
+We have access to a login form in this `login.html` template so we display it. The `post` url
+is our login url. 
+
+[dj_login_view_final.png]
+
+Currently we have no users so the form will no work as it should. But
+it already comes with validation.
+
+[dj_login_attempt.png]
+
+### Loging out a user
+
+Lets work on logging out users. We can head to the `views.py` file and create a new
+view.
+
+```python
+def logout_view(request):
+    logout(request)
+    return HttpResponse("User logged out")
+```
+
+As seen above we have `logout_view`. We are using a `logout` function that we imported.
+
+```python
+from django.contrib.auth import logout
+```
+
+We need to now add the `url` path in the `urls.py`
+
+```python
+path('logout/',views.logout_view,name="emp_logout")
+```
+
+[dj_logout_view.png]
+
+
+

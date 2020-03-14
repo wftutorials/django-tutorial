@@ -3,6 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from employees.models import Employees
 from employees.forms import EmployeeForm, DepartmentForm
+from django.contrib.auth import logout
 
 # Create your views here.
 def hello(request):
@@ -81,6 +82,7 @@ def remove(request):
     except Exception as e:
         return HttpResponse(e)
 
+'''
 def update(request):
     emp = Employees.objects.get(pk=1)
     emp.age = "27"
@@ -89,8 +91,31 @@ def update(request):
         return HttpResponse("object age updated to " + emp.age)
     except Exception as e:
         return HttpResponse(e)
+'''
 
 def create(request):
-    empForm = EmployeeForm()
-    return render(request,'employees/create.html', {'form':empForm})
+    if request.method == "POST":
+        empForm = EmployeeForm(data=request.POST)
+        if empForm.is_valid():
+            empForm.save()
+        return HttpResponse("Employee saved")
+    else:
+        empForm = EmployeeForm()
+        return render(request,'employees/create.html', {'form':empForm})
 
+
+def update(request, id):
+    if request.method == "POST":
+        emp = Employees.objects.get(pk=id)
+        empForm = EmployeeForm(request.POST, instance=emp)
+        if empForm.is_valid():
+            empForm.save()
+            return redirect(request.path)
+    else:
+        emp = Employees.objects.get(pk=id)
+        empForm =  EmployeeForm(instance=emp)
+        return render(request, 'employees/update.html',{'form':empForm})
+
+def logout_view(request):
+    logout(request)
+    return HttpResponse("User logged out")
