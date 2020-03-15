@@ -1,0 +1,9 @@
+
+ {% if user.is_authenticated %}
+    <h1>Showing the current user</h1>
+    <p>UserName: {{ model.username }}</p>
+    <p>Email: {{ model.email }}</p>
+{% else %}
+    <h1>user is not authenticated</h1>
+    <a>Login</a>
+{% endif %}

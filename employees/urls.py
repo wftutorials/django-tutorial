@@ -20,5 +20,6 @@ urlpatterns = [
     path('update/', views.update, name="emp_update"),
     path('login/',LoginView.as_view(template_name="employees/login.html"),name="emp_login"),
     path('logout/',views.logout_view,name="emp_logout"),
+    path('profile/',views.profile, name="emp_profile")
     
 ]

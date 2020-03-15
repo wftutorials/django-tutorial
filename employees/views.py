@@ -4,6 +4,8 @@ from django.views.decorators.csrf import csrf_exempt
 from employees.models import Employees
 from employees.forms import EmployeeForm, DepartmentForm
 from django.contrib.auth import logout
+from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 def hello(request):
@@ -93,6 +95,7 @@ def update(request):
         return HttpResponse(e)
 '''
 
+@login_required
 def create(request):
     if request.method == "POST":
         empForm = EmployeeForm(data=request.POST)
@@ -119,3 +122,6 @@ def update(request, id):
 def logout_view(request):
     logout(request)
     return HttpResponse("User logged out")
+
+def profile(request):
+    return render(request,'employees/profile.html',{'model':request.user})

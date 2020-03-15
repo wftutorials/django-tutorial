@@ -1031,5 +1031,156 @@ path('logout/',views.logout_view,name="emp_logout")
 
 [dj_logout_view.png]
 
+### Creating a super user
 
+Lets create a super user so we can test this login and logout views.
+To do this we run the following command.
 
+```python
+python manage.py createsuperuser
+```
+
+[dj_create_super_user.png]
+
+Once we answer the question we will have created a superuser.
+
+### Testing the login and logout views
+
+Lets test the views we created. First we head to the login page view 
+`http://localhost:8000/employees/login/` and we can attempt to login using the user
+we just created.
+
+Now in our main `settings.py` file we need to tell Django where to go after we logged in.
+
+```python
+LOGIN_REDIRECT_URL= "/employees/profile"
+```
+
+At the bottom of `settings.py` we added the `LOGIN_REDIRECT_URL` variable. This will tell
+Django where to go after we login.
+
+Now in our `views.py` we have
+
+```python
+def profile(request):
+    return render(request,'employees/profile.html',{'model':request.user})
+```
+
+Above we get the `User` object from the `request` object.
+
+Now in our `profile.html` we can add the code below to display our user information.
+
+```html
+<h1>Showing the current user</h1>
+<p>UserName: {{ model.username }}</p>
+<p>Email: {{ model.email }}</p>
+```
+
+The results is shown below.
+
+[dj_showing_loggedin_user.png]
+
+### Access Control
+
+Now since we can login we can implement access control on our views.
+We can make begin logged in an required for certain views. To do this we need to import a 
+decorator. In our `views.py` file we can add
+
+```python
+from django.contrib.auth.decorators import login_required
+```
+
+Do this at the top of the file. Now on a view we want the user to login to access we can do
+
+```python
+@login_required
+def create(request):
+    if request.method == "POST":
+        empForm = EmployeeForm(data=request.POST)
+        if empForm.is_valid():
+            empForm.save()
+        return HttpResponse("Employee saved")
+    else:
+        empForm = EmployeeForm()
+        return render(request,'employees/create.html', {'form':empForm})
+```
+
+In the above code we add the `@login_required` decorator for the `create` view.
+What happens with this is if we go to `http://localhost:8000/employees/create` if the
+user is not logged in Django will redirect to the login page. In order for this to happen
+we need to tell Django where the login page is.
+
+We can do this in the `settings.py` file.
+
+```python
+LOGIN_URL="/employees/login"
+```
+
+At the bottom of the `settings.py` file we add the `LOGIN_URL` as seen above.
+
+Now when we head to `employees/create` it sends us to the login page.
+
+The results is shown below.
+
+[dj_login_redirect_authentication.gif]
+
+#### Checking is user is logged in
+
+In a view we can check to see if a user is logged in by using `user.is_authenticated`.
+Lets see how. In our `profile.html` we add some logic to test if the user is logged in
+
+```html
+ {% if user.is_authenticated %}
+    <h1>Showing the current user</h1>
+    <p>UserName: {{ model.username }}</p>
+    <p>Email: {{ model.email }}</p>
+{% else %}
+    <h1>user is not authenticated</h1>
+{% endif %}
+```
+
+If the user is not logged in we will display **User is not authenticated** otherwise we will
+show the username and email.
+
+### The admin site
+
+Django has by default an admin section. We can manage our users and models using the admin site.
+Lets head to `http://localhost:8000/admin/` we should be greated with a login page.
+
+[dj_admin_login.png]
+
+We already create a super user so we can log in.
+
+[admin_create_user.png]
+
+Under Authentication and Authorization we can create new users if we wanted to. We can also edit and delete users in this page.
+
+#### Adding your models to the admin site
+
+We can add models we created to the admin site. Lets see how.
+Head the the `admin.py` file and add the following lines.
+
+First import your models
+
+```python
+from .models import Employees, Departments
+```
+
+Then register them use the code below.
+
+```python
+admin.site.register(Employees)
+admin.site.register(Departments)
+```
+
+Thats it we can now manage `Employees` and `Departments` from our admin page.
+
+[dj_admin_models.png]
+
+## Conclusion
+
+So now we know how to get started with web development using Django. We look routing,
+rendering views, working with the database, forms and access control. There is alot  more
+Django can do this is just the basics.
+
+Thanks for taking the time to learn with me.
